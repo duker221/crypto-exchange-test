@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import "./App.css";
 import "./index.css";
 import ConnectBtn from "./components/ConnectBtn";
@@ -19,17 +19,19 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    console.log("Текущее состояние стора:", { address, error });
-  }, [error, address]);
-
   return (
     <div className="app-background">
       <header className="w-full h-[96px] flex justify-between items-center p-4 rounded-tl-[20px] z-10">
         <Logo />
         <ConnectBtn connectWallet={handleConnectWallet} address={address} />
       </header>
-
+      <section className="w-[500px] h-[388px] bg-amber-100 rounded-custom-40 border-4 border-black-500">
+        <div className="w-[57px] h-[26px] px-24 py-32">
+          <h1 className="font-firs text-[26px] leading-[26.5px] font-bold">
+            From
+          </h1>
+        </div>
+      </section>
       {error && <div className="text-red-500">{error}</div>}
     </div>
   );

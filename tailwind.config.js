@@ -11,7 +11,9 @@ module.exports = {
         "26px": "26px" // размер шрифта
       },
       lineHeight: {
-        "31.2px": "31.2px" // высота строки
+        // высота строки
+        "31.2px": "31.2px",
+        "26.5px": "26.5px"
       },
       letterSpacing: {
         tighter: "-0.01em" // межбуквенное расстояние
@@ -29,6 +31,9 @@ module.exports = {
         secondBlack: {
           400: "#352831"
         }
+      },
+      borderRadius: {
+        "custom-40": "40px"
       }
     }
   },
