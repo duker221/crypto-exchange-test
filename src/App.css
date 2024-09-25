@@ -1,0 +1,13 @@
+@font-face {
+  font-family: "TT Firs Neue";
+  src: url("../public/fonts/TTFirsNeue-Medium.ttf") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Pirata One";
+  src: url("../public/fonts/PirataOne-Regular.ttf") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+}
