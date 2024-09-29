@@ -8,7 +8,10 @@ module.exports = {
         pirate: ["Pirata One", "sans-serif"]
       },
       fontSize: {
-        "26px": "26px" // размер шрифта
+        "32px": "32px",
+        "28px": "28px",
+        "26px": "26px",
+        "22px": "22px"
       },
       lineHeight: {
         // высота строки
@@ -23,17 +26,21 @@ module.exports = {
           500: "#773900"
         },
         cream: {
-          500: "#FEEFCD"
+          500: "#feefcd"
         },
         black: {
           500: "#362A32"
         },
         secondBlack: {
           400: "#352831"
+        },
+        sand: {
+          500: "#f1deb9"
         }
       },
       borderRadius: {
-        "custom-40": "40px"
+        "custom-40": "40px",
+        "custom-20": "20px"
       }
     }
   },
