@@ -22,7 +22,6 @@ export default function CustomConnectButton() {
                 onClick={openAccountModal}
                 className="bg-brown-500 text-cream-500 w-[230px] h-[56px] sm:w-auto px-6 py-4 rounded-2xl text-center font-firs text-[20px] font-medium leading-[31.2px] tracking-tighter flex items-center gap-2 "
               >
-                {/* Используем иконку кошелька, если она есть */}
                 {account.iconUrl ? (
                   <img
                     src={account.iconUrl}

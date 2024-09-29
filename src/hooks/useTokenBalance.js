@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAccount, useBalance } from "wagmi";
-import { arbitrum } from "wagmi/chains";
 import { Token } from "@uniswap/sdk";
+import { ethers } from "ethers";
 import useWalletStore from "../store/useWalletStore";
-import { getSwapRate, checkAllowance } from "../services/uniswapService"; // Правильный импорт
+import { getSwapRate, checkAllowance } from "../services/uniswapService";
 
 export default function useTokenBalance() {
   const { fromToken, toToken, setFromToken, setToToken } = useWalletStore();
@@ -15,22 +15,19 @@ export default function useTokenBalance() {
 
   const { data: tokenBalance } = useBalance({
     address,
-    chainId: arbitrum.id,
+    chainId: 42161,
     token: fromToken ? fromToken.address : undefined,
     watch: true
   });
 
-  // Создаем экземпляры токенов для Uniswap
   const createUniswapToken = (token) => {
-    const uniswapToken = new Token(
-      arbitrum.id,
-      token.address,
+    return new Token(
+      42161, // Chain ID для Arbitrum
+      ethers.getAddress(token.address),
       token.decimals,
       token.symbol,
       token.name
     );
-    console.log("Создан экземпляр Uniswap Token:", uniswapToken);
-    return uniswapToken;
   };
 
   useEffect(() => {
@@ -74,15 +71,15 @@ export default function useTokenBalance() {
   }, [fromToken, address, amount]);
 
   const handleTokenSelect = (token, closeModal, activeSelect) => {
-    console.log("Выбран токен:", token); // Логируем выбор токена
+    console.log("Выбран токен:", token);
+    const uniswapToken = createUniswapToken(token);
+
     if (activeSelect === "from") {
-      createUniswapToken(token);
-      setFromToken(token);
+      setFromToken(uniswapToken);
     } else {
-      createUniswapToken(token);
-      setToToken(token);
+      setToToken(uniswapToken);
     }
-    closeModal(); // Закрываем модальное окно после выбора токена
+    closeModal();
   };
 
   return {

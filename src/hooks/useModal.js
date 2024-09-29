@@ -2,7 +2,7 @@ import { useState } from "react";
 
 export default function useModal() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeSelect, setActiveSelect] = useState(null); // Для отслеживания, какой токен выбран
+  const [activeSelect, setActiveSelect] = useState(null);
 
   const handleOpenModal = (type) => {
     setActiveSelect(type);

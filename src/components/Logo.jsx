@@ -8,7 +8,7 @@ export default function Logo() {
     >
       <div
         className="w-[64px] h-[64px] bg-center bg-no-repeat bg-cover"
-        style={{ backgroundImage: "url('logo.png')" }} // Иконка внутри логотипа
+        style={{ backgroundImage: "url('logo.png')" }}
       ></div>
       <div className="text-black-500 text-[45px] font-pirate  leading-tight hidden md:block">
         Pirate Bay

@@ -1,78 +1,121 @@
-import { JsonRpcProvider } from "ethers"; // Исправляем импорт ethers
+import { Contract, parseUnits, JsonRpcApiProvider } from "ethers";
 import {
   Fetcher,
   Route,
   Trade,
   TokenAmount,
   TradeType,
-  Percent
+  Percent,
+  Token
 } from "@uniswap/sdk";
-import { createPublicClient, http, parseEther } from "viem";
-import { arbitrum } from "wagmi/chains";
 
-// Создаем провайдер с помощью ethers.js
-const provider = new JsonRpcProvider("https://arb1.arbitrum.io/rpc");
+const UNISWAP_ROUTER_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
 
-// Функция для получения курса обмена
+export const ERC20_ABI = [
+  "function allowance(address owner, address spender) external view returns (uint256)"
+];
+
 export async function getSwapRate(fromToken, toToken) {
-  // Получаем пару токенов через Fetcher
-  const pair = await Fetcher.fetchPairData(fromToken, toToken, provider);
+  if (!window.ethereum) {
+    throw new Error("MetaMask не найден");
+  }
 
-  // Создаем маршрут для обмена токенов
-  const route = new Route([pair], fromToken);
+  // Инициализация BrowserProvider через MetaMask
+  const provider = new JsonRpcApiProvider(
+    "https://arb1.arbitrum.io/rpc",
+    42161
+  );
+  await provider.send("eth_requestAccounts", []);
 
-  // Получаем цену обмена
-  const price = route.midPrice.toSignificant(6);
-  console.log(`1 ${fromToken.symbol} = ${price} ${toToken.symbol}`);
+  const network = await provider.getNetwork();
+  console.log("Подключен к сети:", network);
 
-  return price;
+  // Проверяем корректность токенов
+  if (!fromToken || !toToken || !fromToken.address || !toToken.address) {
+    throw new Error("Токены не определены или имеют некорректные данные");
+  }
+
+  const tokenA = new Token(
+    42161,
+    fromToken.address,
+    fromToken.decimals,
+    fromToken.symbol,
+    fromToken.name
+  );
+  const tokenB = new Token(
+    42161,
+    toToken.address,
+    toToken.decimals,
+    toToken.symbol,
+    toToken.name
+  );
+
+  console.log("Token A:", tokenA);
+  console.log("Token B:", tokenB);
+  console.log(provider);
+
+  try {
+    const pair = await Fetcher.fetchPairData(tokenA, tokenB, provider);
+
+    if (!pair) {
+      throw new Error("Пара токенов не найдена");
+    }
+
+    const route = new Route([pair], tokenB);
+    const price = route.midPrice.toSignificant(6);
+
+    console.log(`1 ${fromToken.symbol} = ${price} ${toToken.symbol}`);
+    return price;
+  } catch (error) {
+    console.error("Ошибка при получении данных пары токенов:", error);
+    throw error;
+  }
 }
 
-// Функция для выполнения обмена
 export async function executeSwap(signer, fromToken, toToken, amountIn) {
-  // Получаем данные для маршрута
-  const pair = await Fetcher.fetchPairData(fromToken, toToken, provider);
-  const route = new Route([pair], fromToken);
+  const tokenA = new Token(
+    42161, // Chain ID для Arbitrum
+    fromToken.address,
+    fromToken.decimals,
+    fromToken.symbol,
+    fromToken.name
+  );
+  const tokenB = new Token(
+    42161, // Chain ID для Arbitrum
+    toToken.address,
+    toToken.decimals,
+    toToken.symbol,
+    toToken.name
+  );
 
-  // Создаем торговую сделку через Uniswap SDK
+  const pair = await Fetcher.fetchPairData(tokenA, tokenB, signer.provider);
+  const route = new Route([pair], tokenA);
+
   const trade = new Trade(
     route,
     new TokenAmount(
-      fromToken,
-      JsonRpcProvider.utils
-        .parseUnits(amountIn.toString(), fromToken.decimals) // Используем ethers
-        .toString()
+      tokenA,
+      parseUnits(amountIn.toString(), fromToken.decimals)
     ),
     TradeType.EXACT_INPUT
   );
 
-  // Устанавливаем допустимое проскальзывание 0.50%
   const slippageTolerance = new Percent("50", "10000");
-
-  // Рассчитываем минимальное количество токенов, которые мы получим
   const amountOutMin = trade.minimumAmountOut(slippageTolerance).raw.toString();
-
-  // Устанавливаем адреса токенов для обмена
   const path = [fromToken.address, toToken.address];
-
-  // Получаем адрес пользователя
   const to = await signer.getAddress();
+  const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
 
-  // Устанавливаем дедлайн для выполнения обмена
-  const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 минут
-
-  // Инициализация контракта Uniswap Router
-  const uniswapRouter = new JsonRpcProvider.Contract(
-    "0xE592427A0AEce92De3Edee1F18E0157C05861564", // Uniswap V3 Router
+  const uniswapRouter = new Contract(
+    UNISWAP_ROUTER_ADDRESS,
     [
       "function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)"
     ],
     signer
   );
 
-  // Выполнение swap
   const tx = await uniswapRouter.swapExactTokensForTokens(
-    JsonRpcProvider.utils.parseUnits(amountIn.toString(), fromToken.decimals),
+    parseUnits(amountIn.toString(), fromToken.decimals),
     amountOutMin,
     path,
     to,
@@ -83,33 +126,16 @@ export async function executeSwap(signer, fromToken, toToken, amountIn) {
 }
 
 // Функция для проверки разрешения на отправку токенов (allowance)
-export async function checkAllowance(tokenAddress, owner, spender, amount) {
-  const publicClient = createPublicClient({
-    chain: arbitrum,
-    transport: http()
-  });
+export async function checkAllowance(
+  signer,
+  tokenAddress,
+  spenderAddress,
+  amount
+) {
+  const tokenContract = new Contract(tokenAddress, ERC20_ABI, signer);
+  const ownerAddress = await signer.getAddress();
+  const allowance = await tokenContract.allowance(ownerAddress, spenderAddress);
+  const isAllowed = parseUnits(amount.toString(), 18).lte(allowance);
 
-  const allowanceABI = [
-    {
-      constant: true,
-      inputs: [
-        { name: "owner", type: "address" },
-        { name: "spender", type: "address" }
-      ],
-      name: "allowance",
-      outputs: [{ name: "", type: "uint256" }],
-      payable: false,
-      stateMutability: "view",
-      type: "function"
-    }
-  ];
-
-  const allowance = await publicClient.readContract({
-    address: tokenAddress,
-    abi: allowanceABI,
-    functionName: "allowance",
-    args: [owner, spender]
-  });
-
-  return allowance >= parseEther(amount.toString());
+  return isAllowed;
 }
