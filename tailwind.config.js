@@ -22,6 +22,9 @@ module.exports = {
         tighter: "-0.01em" // межбуквенное расстояние
       },
       colors: {
+        pink: {
+          500: "#fed2cd"
+        },
         brown: {
           500: "#773900"
         },

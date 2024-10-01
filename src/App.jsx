@@ -22,13 +22,16 @@ function App() {
   const { isModalOpen, activeSelect, handleOpenModal, handleCloseModal } =
     useModal();
   const [amountIn, setAmountIn] = useState(0);
-  const { tokens, setError } = useWalletStore();
+  const { tokens, setError, error } = useWalletStore();
   const [toAmount, setToAmount] = useState("");
 
   const handleFromAmountChange = async (value) => {
     if (value < 0) {
       setAmountIn("");
       return;
+    }
+    if (balance < value) {
+      setError("Недостаточно средств");
     }
     setAmountIn(value);
 
@@ -59,8 +62,8 @@ function App() {
                 <CustomConnectButton />
               </header>
 
-              <section className="w-[500px] h-auto py-8 px-6 flex flex-col gap-[32px] rounded-[40px] border-[4px] border-black-500 bg-cream-500">
-                <div className="flex flex-col gap-[32px]">
+              <section className="w-[500px] h-auto py-8 px-6 flex flex-col gap-[12px] rounded-[40px] border-[4px] border-black-500 bg-cream-500">
+                <div className="flex flex-col gap-[12px]">
                   <h1 className="font-bold text-[26px]">From</h1>
                   {fromToken ? (
                     <SelectedCurrency
@@ -70,7 +73,7 @@ function App() {
                       onOpenModal={() => handleOpenModal("from")}
                       onAmountChange={handleFromAmountChange}
                       balance={balance ? balance.formatted : "0"}
-                      readOnly={false} // Первый инпут редактируемый
+                      readOnly={false}
                     />
                   ) : (
                     <TokenSelect onOpenModal={() => handleOpenModal("from")} />
@@ -83,7 +86,7 @@ function App() {
                     selectedToken={toToken.name}
                     logoPath={toToken.iconUrl}
                     onOpenModal={() => handleOpenModal("to")}
-                    readOnly={true} // Второй инпут только для чтения
+                    readOnly
                   />
                 ) : (
                   <TokenSelect onOpenModal={() => handleOpenModal("to")} />
@@ -91,10 +94,11 @@ function App() {
 
                 <button
                   type="button"
-                  className="w-full py-4 bg-blue-500 text-white font-bold rounded mt-4"
+                  className={`w-full h-auto max-h-[71px] py-4 text-[26px] bg-brown-500 text-white rounded-2xl mt-4 font-medium text-center ${fromToken && toToken ? "" : "hidden"}`}
                   onClick={() => console.log("test")}
-                  disabled={false}
-                ></button>
+                >
+                  Approve
+                </button>
               </section>
             </div>
             {isModalOpen && (
