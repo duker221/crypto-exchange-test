@@ -6,26 +6,28 @@ const useWalletStore = create((set) => ({
   tokens: [
     {
       name: "USDT",
-      address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+      address: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
       symbol: "USDT",
       iconUrl: "/currency/USDT.png",
       decimals: 6
     },
     {
       name: "USDC",
-      address: "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8",
+      address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
       symbol: "USDC",
       iconUrl: "/currency/USDC.png",
       decimals: 6
     },
     {
       name: "ETH",
-      address: undefined,
+      address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
       symbol: "ETH",
       iconUrl: "/currency/ETH.png",
       decimals: 18
     }
   ],
+  error: [],
+  setError: (error) => set({ errors: error }),
   setFromToken: (token) => set({ fromToken: token }),
   setToToken: (token) => set({ toToken: token })
 }));

@@ -4,11 +4,10 @@ import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { BrowserProvider, Contract } from "ethers";
 import CustomConnectButton from "./components/Buttons/ConnectBtn";
 import config from "./services/config";
 import Logo from "./components/Logo";
-import { getSwapRate, executeSwap, ERC20_ABI } from "./services/uniswapService";
+import { getSwapRate } from "./services/uniswapService";
 import TokenSelect from "./components/Buttons/TokenSelect";
 import SelectedCurrency from "./components/Buttons/SelectedCurrency";
 import TokenModal from "./components/Modals/TokenModal";
@@ -22,59 +21,30 @@ function App() {
   const { fromToken, toToken, balance, handleTokenSelect } = useTokenBalance();
   const { isModalOpen, activeSelect, handleOpenModal, handleCloseModal } =
     useModal();
-  const { tokens } = useWalletStore();
-  const [fromAmount, setFromAmount] = useState("");
+  const [amountIn, setAmountIn] = useState(0);
+  const { tokens, setError } = useWalletStore();
   const [toAmount, setToAmount] = useState("");
-  const [isSwapping, setIsSwapping] = useState(false);
 
   const handleFromAmountChange = async (value) => {
-    setFromAmount(value);
+    if (value < 0) {
+      setAmountIn("");
+      return;
+    }
+    setAmountIn(value);
 
     if (fromToken && toToken) {
-      console.log(fromToken, toToken);
       try {
-        const calculatedToAmount = await getSwapRate(fromToken, toToken);
+        const calculatedToAmount = await getSwapRate(
+          value,
+          fromToken.address,
+          toToken.address
+        );
         setToAmount(calculatedToAmount);
       } catch (error) {
         console.error("Ошибка при расчете курса:", error);
+        setError(error.message);
+        setToAmount("");
       }
-    }
-  };
-
-  const handleSwap = async () => {
-    if (!fromToken || !toToken || !fromAmount) return;
-
-    try {
-      setIsSwapping(true);
-
-      if (!window.ethereum) {
-        alert("Пожалуйста, установите MetaMask.");
-        return;
-      }
-
-      const provider = new BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      const signer = await provider.getSigner();
-
-      const tokenContract = new Contract(fromToken.address, ERC20_ABI, signer);
-      const tokenBalance = await tokenContract.balanceOf(
-        await signer.getAddress()
-      );
-      console.log(`Баланс токена ${fromToken.address}: ${tokenBalance}`);
-
-      if (balance.lt(fromAmount)) {
-        alert("Недостаточно баланса для обмена");
-        return;
-      }
-
-      await executeSwap(signer, fromToken, toToken, fromAmount);
-
-      alert("Обмен выполнен успешно!");
-    } catch (error) {
-      console.error("Ошибка при обмене:", error);
-      alert("Ошибка при выполнении обмена");
-    } finally {
-      setIsSwapping(false);
     }
   };
 
@@ -94,12 +64,13 @@ function App() {
                   <h1 className="font-bold text-[26px]">From</h1>
                   {fromToken ? (
                     <SelectedCurrency
-                      amount={fromAmount}
+                      amount={amountIn}
                       selectedToken={fromToken.name}
                       logoPath={fromToken.iconUrl}
                       onOpenModal={() => handleOpenModal("from")}
                       onAmountChange={handleFromAmountChange}
                       balance={balance ? balance.formatted : "0"}
+                      readOnly={false} // Первый инпут редактируемый
                     />
                   ) : (
                     <TokenSelect onOpenModal={() => handleOpenModal("from")} />
@@ -112,18 +83,18 @@ function App() {
                     selectedToken={toToken.name}
                     logoPath={toToken.iconUrl}
                     onOpenModal={() => handleOpenModal("to")}
+                    readOnly={true} // Второй инпут только для чтения
                   />
                 ) : (
                   <TokenSelect onOpenModal={() => handleOpenModal("to")} />
                 )}
+
                 <button
                   type="button"
                   className="w-full py-4 bg-blue-500 text-white font-bold rounded mt-4"
-                  onClick={handleSwap}
-                  disabled={isSwapping}
-                >
-                  {isSwapping ? "Swapping..." : "Swap Tokens"}
-                </button>
+                  onClick={() => console.log("test")}
+                  disabled={false}
+                ></button>
               </section>
             </div>
             {isModalOpen && (

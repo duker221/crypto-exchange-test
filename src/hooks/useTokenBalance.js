@@ -1,53 +1,46 @@
 import { useEffect, useState } from "react";
-import { useAccount, useBalance } from "wagmi";
-import { Token } from "@uniswap/sdk";
-import { ethers } from "ethers";
+import { useAccount } from "wagmi";
 import useWalletStore from "../store/useWalletStore";
-import { getSwapRate, checkAllowance } from "../services/uniswapService";
+import {
+  getTokenBalance,
+  getSwapRate,
+  getTokenAllowance
+} from "../services/uniswapService";
 
 export default function useTokenBalance() {
-  const { fromToken, toToken, setFromToken, setToToken } = useWalletStore();
+  const { fromToken, toToken, setFromToken, setToToken } =
+    useWalletStore.getState();
   const { address } = useAccount();
   const [amount, setAmount] = useState("");
   const [balance, setBalance] = useState(null);
   const [amountReceived, setAmountReceived] = useState("");
   const [hasAllowance, setHasAllowance] = useState(true);
 
-  const { data: tokenBalance } = useBalance({
-    address,
-    chainId: 42161,
-    token: fromToken ? fromToken.address : undefined,
-    watch: true
-  });
-
-  const createUniswapToken = (token) => {
-    return new Token(
-      42161, // Chain ID для Arbitrum
-      ethers.getAddress(token.address),
-      token.decimals,
-      token.symbol,
-      token.name
-    );
-  };
-
+  // Получение баланса токена
   useEffect(() => {
-    if (fromToken && tokenBalance) {
-      setBalance(tokenBalance);
-      console.log(tokenBalance);
-    }
-  }, [fromToken, tokenBalance]);
+    const fetchTokenBalance = async () => {
+      if (fromToken && address) {
+        const userBalance = await getTokenBalance(
+          fromToken.symbol,
+          fromToken.address,
+          address
+        );
+        setBalance(userBalance); // Обновляем баланс
+        console.log("Баланс токена:", userBalance);
+      }
+    };
+    fetchTokenBalance();
+  }, [fromToken, address]);
 
+  // Обновление курса обмена
   useEffect(() => {
     const updateSwapRate = async () => {
       if (fromToken && toToken && amount) {
-        console.log(fromToken, toToken, amount);
-        const fromUniswapToken = createUniswapToken(fromToken);
-        const toUniswapToken = createUniswapToken(toToken);
-
+        console.log("Текущие токены и сумма:", fromToken, toToken, amount);
         const rate = await getSwapRate(
-          fromUniswapToken,
-          toUniswapToken,
-          amount
+          amount,
+          fromToken.address,
+          toToken.address
         );
         setAmountReceived(rate);
       }
@@ -55,14 +48,14 @@ export default function useTokenBalance() {
     updateSwapRate();
   }, [fromToken, toToken, amount]);
 
+  // Проверка разрешений (allowance)
   useEffect(() => {
     const checkTokenAllowance = async () => {
       if (fromToken && address && amount) {
-        const isAllowed = await checkAllowance(
+        const isAllowed = await getTokenAllowance(
           fromToken.address,
           address,
-          "0xE592427A0AEce92De3Edee1F18E0157C05861564",
-          amount
+          "0xE592427A0AEce92De3Edee1F18E0157C05861564" // Адрес контракта-спендера
         );
         setHasAllowance(isAllowed);
       }
@@ -70,14 +63,14 @@ export default function useTokenBalance() {
     checkTokenAllowance();
   }, [fromToken, address, amount]);
 
+  // Обработчик выбора токена
   const handleTokenSelect = (token, closeModal, activeSelect) => {
     console.log("Выбран токен:", token);
-    const uniswapToken = createUniswapToken(token);
 
     if (activeSelect === "from") {
-      setFromToken(uniswapToken);
+      setFromToken(token);
     } else {
-      setToToken(uniswapToken);
+      setToToken(token);
     }
     closeModal();
   };

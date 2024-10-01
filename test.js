@@ -1,40 +1,91 @@
-import { JsonRpcProvider } from "ethers";
-import { Fetcher, Token } from "@uniswap/sdk";
+const axios = require("axios");
 
-// Функция для тестирования
-async function testUniswapFetcher() {
-  // Используем JsonRpcProvider для подключения к сети Arbitrum
-  const provider = new JsonRpcProvider("https://arb1.arbitrum.io/rpc", 42161);
+// Load environment variables from .env file
+const integratorId = "crypto-exchange-27412c9b-8303-4c14-a16f-9f291058e335"; // Make sure you set this in your .env file
 
+// Define chain and token addresses
+const fromChainId = "42161"; // Arbitrum
+const toChainId = "42161"; // Arbitrum
+
+// Define token addresses
+const WETH_ADDRESS = "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"; // WETH on Arbitrum
+const USDC_ADDRESS = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"; // USDC on Arbitrum
+
+// Function to get token information from Squid API
+const getTokens = async () => {
   try {
-    // Получаем информацию о сети
-    const network = await provider.getNetwork();
-    console.log("Провайдер подключен к сети:", network);
-
-    // Определяем два токена: USDT и USDC
-    const USDT = new Token(
-      42161,
-      "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-      6,
-      "USDT",
-      "Tether USD"
+    const result = await axios.get(
+      "https://apiplus.squidrouter.com/v2/sdk-info",
+      {
+        headers: {
+          "x-integrator-id": integratorId
+        }
+      }
     );
-    const USDC = new Token(
-      42161,
-      "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
-      6,
-      "USDC",
-      "USD Coin"
-    );
-    console.log("test" + (await provider.getSigner()));
-    // Попробуем получить данные пары через Fetcher
-    const pair = await Fetcher.fetchPairData(USDT, USDC, provider);
-
-    console.log("Пара токенов получена:", pair);
+    return result.data.tokens;
   } catch (error) {
-    console.error("Ошибка при получении данных пары токенов:", error);
+    console.error("Error fetching token data:", error);
+    return [];
   }
-}
+};
 
-// Запуск теста
-testUniswapFetcher();
+// Function to find a specific token in the token list
+const findToken = (tokens, address, chainId) => {
+  if (!Array.isArray(tokens)) {
+    console.error("Invalid tokens data structure");
+    return null;
+  }
+
+  return tokens.find(
+    (t) =>
+      t.address.toLowerCase() === address.toLowerCase() && t.chainId === chainId
+  );
+};
+
+// Function to calculate the exchange amount
+const calculateExchangeAmount = async (
+  fromAmount,
+  fromTokenAddress,
+  toTokenAddress
+) => {
+  try {
+    // Get token information
+    const tokens = await getTokens();
+
+    // Find the specific tokens
+    const fromToken = findToken(tokens, fromTokenAddress, fromChainId);
+    const toToken = findToken(tokens, toTokenAddress, toChainId);
+
+    if (!fromToken || !toToken) {
+      console.error("Tokens not found");
+      return;
+    }
+
+    // Log token prices for debugging
+    console.log(
+      `From Token (${fromToken.symbol}) Price: $${fromToken.usdPrice}`
+    );
+    console.log(`To Token (${toToken.symbol}) Price: $${toToken.usdPrice}`);
+
+    // Calculate how much you will get for the exchanged tokens
+    const fromTokenPrice = fromToken.usdPrice;
+    const toTokenPrice = toToken.usdPrice;
+
+    // Calculate the dollar value of the exchanged tokens
+    const fromAmountInUSD =
+      (Number(fromAmount) / 10 ** fromToken.decimals) * fromTokenPrice;
+
+    // Calculate how much you will get in toToken
+    const toAmount = (fromAmountInUSD / toTokenPrice) * 10 ** toToken.decimals;
+
+    console.log(
+      `You will receive approximately ${toAmount.toFixed(6)} ${toToken.symbol} for ${fromAmount} ${fromToken.symbol}`
+    );
+  } catch (error) {
+    console.error("Error calculating exchange amount:", error);
+  }
+};
+
+// Example call to the function
+const fromAmount = "1000000000000000000"; // 1 WETH in wei
+calculateExchangeAmount(fromAmount, WETH_ADDRESS, USDC_ADDRESS);
