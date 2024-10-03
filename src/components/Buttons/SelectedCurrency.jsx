@@ -9,9 +9,7 @@ export default function SelectedCurrency({
   readOnly // Добавьте этот пропс
 }) {
   return (
-    <div
-      className={`w-[452px] h-[88px] rounded-custom-20 px-[30px] py-4 flex items-center justify-between border-2 border-black-500 box-border bg-sand-500`}
-    >
+    <div className="w-[452px] h-[88px] rounded-custom-20 px-[30px] py-4 flex items-center justify-between border-2 border-black-500 box-border bg-sand-500">
       <input
         type="number"
         value={amount}

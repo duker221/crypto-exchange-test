@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { ToastContainer, toast } from "react-toastify";
 import CustomConnectButton from "./components/Buttons/ConnectBtn";
 import config from "./services/config";
 import Logo from "./components/Logo";
@@ -18,11 +19,19 @@ import useWalletStore from "./store/useWalletStore";
 const queryClient = new QueryClient();
 
 function App() {
-  const { fromToken, toToken, balance, handleTokenSelect } = useTokenBalance();
+  const {
+    fromToken,
+    toToken,
+    balance,
+    handleTokenSelect,
+    hasAllowance,
+    handleApprove
+  } = useTokenBalance();
+
   const { isModalOpen, activeSelect, handleOpenModal, handleCloseModal } =
     useModal();
   const [amountIn, setAmountIn] = useState(0);
-  const { tokens, setError, error } = useWalletStore();
+  const { tokens, setError } = useWalletStore();
   const [toAmount, setToAmount] = useState("");
 
   const handleFromAmountChange = async (value) => {
@@ -33,23 +42,29 @@ function App() {
     if (balance < value) {
       setError("Недостаточно средств");
     }
+    console.log(balance);
     setAmountIn(value);
-
-    if (fromToken && toToken) {
-      try {
-        const calculatedToAmount = await getSwapRate(
-          value,
-          fromToken.address,
-          toToken.address
-        );
-        setToAmount(calculatedToAmount);
-      } catch (error) {
-        console.error("Ошибка при расчете курса:", error);
-        setError(error.message);
-        setToAmount("");
-      }
-    }
   };
+  useEffect(() => {
+    if (fromToken && toToken && amountIn > 0) {
+      const calculateToAmount = async () => {
+        try {
+          const calculatedToAmount = await getSwapRate(
+            amountIn,
+            fromToken.address,
+            toToken.address
+          );
+          setToAmount(calculatedToAmount);
+        } catch (error) {
+          console.error("Ошибка при расчете курса:", error);
+          setError(error.message);
+          setToAmount("");
+        }
+      };
+
+      calculateToAmount();
+    }
+  }, [amountIn, fromToken, toToken]);
 
   return (
     <WagmiProvider config={config}>
@@ -95,15 +110,17 @@ function App() {
                 <button
                   type="button"
                   className={`w-full h-auto max-h-[71px] py-4 text-[26px] bg-brown-500 text-white rounded-2xl mt-4 font-medium text-center ${fromToken && toToken ? "" : "hidden"}`}
-                  onClick={() => console.log("test")}
+                  onClick={handleApprove}
                 >
-                  Approve
+                  {hasAllowance ? "Своп" : "Approve"}
                 </button>
               </section>
             </div>
+            <ToastContainer />
             {isModalOpen && (
               <div className="absolute inset-0 z-50">
                 <TokenModal
+                  toast={toast}
                   onSelect={(token) =>
                     handleTokenSelect(token, handleCloseModal, activeSelect)
                   }

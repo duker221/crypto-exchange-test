@@ -4,7 +4,8 @@ import useWalletStore from "../store/useWalletStore";
 import {
   getTokenBalance,
   getSwapRate,
-  getTokenAllowance
+  checkAllowance,
+  approveToken
 } from "../services/uniswapService";
 
 export default function useTokenBalance() {
@@ -14,7 +15,7 @@ export default function useTokenBalance() {
   const [amount, setAmount] = useState("");
   const [balance, setBalance] = useState(null);
   const [amountReceived, setAmountReceived] = useState("");
-  const [hasAllowance, setHasAllowance] = useState(true);
+  const [hasAllowance, setHasAllowance] = useState(false);
 
   // Получение баланса токена
   useEffect(() => {
@@ -48,20 +49,26 @@ export default function useTokenBalance() {
     updateSwapRate();
   }, [fromToken, toToken, amount]);
 
-  // Проверка разрешений (allowance)
-  useEffect(() => {
-    const checkTokenAllowance = async () => {
-      if (fromToken && address && amount) {
-        const isAllowed = await getTokenAllowance(
+  // Обработчик аппрува
+  const handleApprove = async () => {
+    if (!hasAllowance) {
+      console.log("Запрашиваем разрешение на использование токена");
+
+      try {
+        await approveToken(fromToken.address, amount);
+        const updatedAllowance = await checkAllowance(
           fromToken.address,
-          address,
-          "0xE592427A0AEce92De3Edee1F18E0157C05861564" // Адрес контракта-спендера
+          address
         );
-        setHasAllowance(isAllowed);
+        setHasAllowance(updatedAllowance);
+        console.log("Токен успешно одобрен");
+      } catch (error) {
+        console.error("Ошибка при получении аппрува:", error);
       }
-    };
-    checkTokenAllowance();
-  }, [fromToken, address, amount]);
+    } else {
+      console.log("Разрешение уже выдано");
+    }
+  };
 
   // Обработчик выбора токена
   const handleTokenSelect = (token, closeModal, activeSelect) => {
@@ -83,6 +90,7 @@ export default function useTokenBalance() {
     balance,
     amountReceived,
     hasAllowance,
+    handleApprove,
     handleTokenSelect
   };
 }

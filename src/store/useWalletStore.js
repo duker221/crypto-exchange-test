@@ -26,8 +26,8 @@ const useWalletStore = create((set) => ({
       decimals: 18
     }
   ],
-  error: [],
-  setError: (error) => set({ errors: error }),
+  errors: [],
+  setError: (error) => set((state) => ({ errors: [...state.errors, error] })),
   setFromToken: (token) => set({ fromToken: token }),
   setToToken: (token) => set({ toToken: token })
 }));

@@ -6,6 +6,8 @@ export default function SelectCurrency({ currencyName, logoPath, onSelect }) {
       type="button"
       className="w-[344px] h-[96px] rounded-[20px] px-[20px] py-[16px] border-[2px] border-black-500 flex justify-between items-center mb-4 box-border"
       onClick={onSelect}
+      aria-label={`Select ${currencyName}`}
+      title={`Select ${currencyName}`}
     >
       <span className="font-medium text-[26px] leading-[33.6px] text-left">
         {currencyName}
