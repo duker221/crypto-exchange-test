@@ -18,25 +18,7 @@ export default function useModal() {
       return false;
     }
 
-    try {
-      const accounts = await window.ethereum.request({
-        method: "eth_accounts"
-      });
-
-      if (accounts.length === 0) {
-        const errorMessage = "Wallet is not connected.";
-        setError(errorMessage);
-        toast.error(errorMessage);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      const errorMessage = "Ошибка при получении аккаунтов.";
-      setError(errorMessage);
-      toast.error(errorMessage);
-      return false;
-    }
+    return true;
   };
 
   const handleOpenModal = async (type) => {

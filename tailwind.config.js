@@ -1,5 +1,4 @@
 /** @type {import('tailwindcss').Config} */
-// tailwind.config.js
 module.exports = {
   theme: {
     extend: {
@@ -19,9 +18,12 @@ module.exports = {
         "26.5px": "26.5px"
       },
       letterSpacing: {
-        tighter: "-0.01em" // межбуквенное расстояние
+        tighter: "-0.01em"
       },
       colors: {
+        error: {
+          500: "#c00000"
+        },
         pink: {
           500: "#fed2cd"
         },

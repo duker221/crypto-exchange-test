@@ -4,7 +4,7 @@ export default function SelectCurrency({ currencyName, logoPath, onSelect }) {
   return (
     <button
       type="button"
-      className="w-[344px] h-[96px] rounded-[20px] px-[20px] py-[16px] border-[2px] border-black-500 flex justify-between items-center mb-4 box-border"
+      className="w-full max-w-[344px] h-[96px] rounded-[20px] px-4 py-2 border-2 border-black-500 flex justify-between items-center mb-4 box-border hover:bg-sand-500 transition-colors duration-200"
       onClick={onSelect}
       aria-label={`Select ${currencyName}`}
       title={`Select ${currencyName}`}

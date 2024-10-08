@@ -8,7 +8,7 @@ import { ToastContainer, toast } from "react-toastify";
 import CustomConnectButton from "./components/Buttons/ConnectBtn";
 import config from "./services/config";
 import Logo from "./components/Logo";
-import { getSwapRate } from "./services/uniswapService";
+import { getSwapRate, performSwap } from "./services/viemService";
 import TokenSelect from "./components/Buttons/TokenSelect";
 import SelectedCurrency from "./components/Buttons/SelectedCurrency";
 import TokenModal from "./components/Modals/TokenModal";
@@ -25,7 +25,8 @@ function App() {
     balance,
     handleTokenSelect,
     hasAllowance,
-    handleApprove
+    checkUserAllowance,
+    address
   } = useTokenBalance();
 
   const { isModalOpen, activeSelect, handleOpenModal, handleCloseModal } =
@@ -33,18 +34,24 @@ function App() {
   const [amountIn, setAmountIn] = useState(0);
   const { tokens, setError } = useWalletStore();
   const [toAmount, setToAmount] = useState("");
+  const [amountError, setAmountError] = useState(false);
+  const [isCheckingAllowance, setIsCheckingAllowance] = useState(false);
 
-  const handleFromAmountChange = async (value) => {
+  const handleFromAmountChange = (value) => {
     if (value < 0) {
       setAmountIn("");
       return;
     }
     if (balance < value) {
+      console.log(value);
+      setAmountError(true);
       setError("Недостаточно средств");
+    } else {
+      setAmountError(false);
     }
-    console.log(balance);
-    setAmountIn(value);
+    setAmountIn(Number(value));
   };
+
   useEffect(() => {
     if (fromToken && toToken && amountIn > 0) {
       const calculateToAmount = async () => {
@@ -56,7 +63,6 @@ function App() {
           );
           setToAmount(calculatedToAmount);
         } catch (error) {
-          console.error("Ошибка при расчете курса:", error);
           setError(error.message);
           setToAmount("");
         }
@@ -65,6 +71,43 @@ function App() {
       calculateToAmount();
     }
   }, [amountIn, fromToken, toToken]);
+
+  const handleCheckAllowance = async () => {
+    if (amountError || !fromToken || !toToken || amountIn <= 0) return;
+
+    setIsCheckingAllowance(true);
+    const allowanceValid = await checkUserAllowance(amountIn);
+
+    if (!allowanceValid) {
+      toast.info("Необходимо подтвердить разрешение (Approve)");
+    } else {
+      toast.info("Разрешение получено. Готово к свопу.");
+    }
+    setIsCheckingAllowance(false);
+  };
+
+  const swapTokens = async () => {
+    console.log("Amount to swap:", amountIn);
+    if (!amountError && fromToken && toToken && amountIn > 0) {
+      console.log("Initiating swap with amount:", amountIn);
+      try {
+        await performSwap(
+          fromToken.address,
+          toToken.address,
+          amountIn,
+          1,
+          address
+        );
+        toast.success("Своп выполнен успешно!");
+      } catch (error) {
+        setError(error.message);
+        console.log(error);
+        toast.error("Ошибка при выполнении свопа");
+      }
+    } else {
+      console.error("Swap not initiated, amount error:", amountError);
+    }
+  };
 
   return (
     <WagmiProvider config={config}>
@@ -77,9 +120,11 @@ function App() {
                 <CustomConnectButton />
               </header>
 
-              <section className="w-[500px] h-auto py-8 px-6 flex flex-col gap-[12px] rounded-[40px] border-[4px] border-black-500 bg-cream-500">
+              <section className="w-full max-w-[500px] h-auto py-8 px-6 flex flex-col gap-[12px] rounded-[40px] border-[4px] border-black-500 bg-cream-500 mx-auto">
                 <div className="flex flex-col gap-[12px]">
-                  <h1 className="font-bold text-[26px]">From</h1>
+                  <h1 className="font-bold text-[26px] text-center md:text-left">
+                    From
+                  </h1>
                   {fromToken ? (
                     <SelectedCurrency
                       amount={amountIn}
@@ -89,12 +134,15 @@ function App() {
                       onAmountChange={handleFromAmountChange}
                       balance={balance ? balance.formatted : "0"}
                       readOnly={false}
+                      error={amountError}
                     />
                   ) : (
                     <TokenSelect onOpenModal={() => handleOpenModal("from")} />
                   )}
                 </div>
-                <h1 className="font-bold text-[26px]">To</h1>
+                <h1 className="font-bold text-[26px] text-center md:text-left">
+                  To
+                </h1>
                 {toToken ? (
                   <SelectedCurrency
                     amount={toAmount}
@@ -109,13 +157,26 @@ function App() {
 
                 <button
                   type="button"
-                  className={`w-full h-auto max-h-[71px] py-4 text-[26px] bg-brown-500 text-white rounded-2xl mt-4 font-medium text-center ${fromToken && toToken ? "" : "hidden"}`}
-                  onClick={handleApprove}
+                  className={`w-full h-auto max-h-[71px] py-4 text-[26px] bg-brown-500 text-white rounded-2xl mt-4 font-medium text-center ${
+                    fromToken && toToken && !isCheckingAllowance ? "" : "hidden"
+                  }`}
+                  onClick={hasAllowance ? swapTokens : handleCheckAllowance}
+                  disabled={amountError || isCheckingAllowance}
                 >
                   {hasAllowance ? "Своп" : "Approve"}
                 </button>
               </section>
+              <footer className="px-[40px] py-[32px] fixed bottom-0 left-0 right-0 flex justify-center sm:absolute sm:justify-end sm:bottom-0 sm:right-0">
+                <div className="w-auto h-auto sm:h-[112px] sm:w-[112px] flex items-center radius-2xl bg-cream-500 p-2 rounded-2xl border-[2px] border-brown-500">
+                  <img
+                    src="./ArbitrumLogo.png"
+                    alt="Arbitrum Logo"
+                    className="w-[92px] h-[77px]"
+                  />
+                </div>
+              </footer>
             </div>
+
             <ToastContainer />
             {isModalOpen && (
               <div className="absolute inset-0 z-50">

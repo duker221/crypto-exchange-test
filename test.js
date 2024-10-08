@@ -1,91 +1,39 @@
-const axios = require("axios");
+import { Squid } from "@0xsquid/sdk";
+import { arbitrum } from "viem/chains";
 
-// Load environment variables from .env file
-const integratorId = "crypto-exchange-27412c9b-8303-4c14-a16f-9f291058e335"; // Make sure you set this in your .env file
+const INTEGRATOR_ID = "crypto-exchange-27412c9b-8303-4c14-a16f-9f291058e335";
+const CHAIN = arbitrum;
+const SQUID_API_URL = "https://apiplus.squidrouter.com"; // Добавлен пропущенный "const"
 
-// Define chain and token addresses
-const fromChainId = "42161"; // Arbitrum
-const toChainId = "42161"; // Arbitrum
+const squid = new Squid({
+  chain: CHAIN,
+  integratorId: INTEGRATOR_ID,
+  baseUrl: SQUID_API_URL
+});
 
-// Define token addresses
-const WETH_ADDRESS = "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"; // WETH on Arbitrum
-const USDC_ADDRESS = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"; // USDC on Arbitrum
+// Инициализация Squid
+await squid.init();
 
-// Function to get token information from Squid API
-const getTokens = async () => {
-  try {
-    const result = await axios.get(
-      "https://apiplus.squidrouter.com/v2/sdk-info",
-      {
-        headers: {
-          "x-integrator-id": integratorId
-        }
-      }
-    );
-    return result.data.tokens;
-  } catch (error) {
-    console.error("Error fetching token data:", error);
-    return [];
-  }
+const routeParams = {
+  fromTokenAddress: "0xc2deB19D78F5b180ADC36c370A37Cea52E09137C", // Адрес токена отправления
+  toTokenAddress: "0xc2deB19D78F5b180ADC36c370A37Cea52E09137C", // Адрес токена получения
+  amount: "200000000000000", // Пример для 0.0002 ETH в wei
+  userAddress: "0xc2deB19D78F5b180ADC36c370A37Cea52E09137C" // Адрес пользователя
 };
 
-// Function to find a specific token in the token list
-const findToken = (tokens, address, chainId) => {
-  if (!Array.isArray(tokens)) {
-    console.error("Invalid tokens data structure");
-    return null;
-  }
+try {
+  // Получение маршрута
+  const routeResponse = await squid.getRoute(routeParams);
+  console.log("Route Response:", routeResponse);
 
-  return tokens.find(
-    (t) =>
-      t.address.toLowerCase() === address.toLowerCase() && t.chainId === chainId
-  );
-};
+  const executeParams = {
+    route: routeResponse.route,
+    sender: "0xc2deB19D78F5b180ADC36c370A37Cea52E09137C" // Адрес отправителя
+  };
 
-// Function to calculate the exchange amount
-const calculateExchangeAmount = async (
-  fromAmount,
-  fromTokenAddress,
-  toTokenAddress
-) => {
-  try {
-    // Get token information
-    const tokens = await getTokens();
-
-    // Find the specific tokens
-    const fromToken = findToken(tokens, fromTokenAddress, fromChainId);
-    const toToken = findToken(tokens, toTokenAddress, toChainId);
-
-    if (!fromToken || !toToken) {
-      console.error("Tokens not found");
-      return;
-    }
-
-    // Log token prices for debugging
-    console.log(
-      `From Token (${fromToken.symbol}) Price: $${fromToken.usdPrice}`
-    );
-    console.log(`To Token (${toToken.symbol}) Price: $${toToken.usdPrice}`);
-
-    // Calculate how much you will get for the exchanged tokens
-    const fromTokenPrice = fromToken.usdPrice;
-    const toTokenPrice = toToken.usdPrice;
-
-    // Calculate the dollar value of the exchanged tokens
-    const fromAmountInUSD =
-      (Number(fromAmount) / 10 ** fromToken.decimals) * fromTokenPrice;
-
-    // Calculate how much you will get in toToken
-    const toAmount = (fromAmountInUSD / toTokenPrice) * 10 ** toToken.decimals;
-
-    console.log(
-      `You will receive approximately ${toAmount.toFixed(6)} ${toToken.symbol} for ${fromAmount} ${fromToken.symbol}`
-    );
-  } catch (error) {
-    console.error("Error calculating exchange amount:", error);
-  }
-};
-
-// Example call to the function
-const fromAmount = "1000000000000000000"; // 1 WETH in wei
-calculateExchangeAmount(fromAmount, WETH_ADDRESS, USDC_ADDRESS);
+  // Выполнение свопа
+  const transactionResponses = await squid.executeRoute(executeParams);
+  console.log("Transaction Responses:", transactionResponses);
+} catch (error) {
+  console.error("Error during swap:", error);
+}

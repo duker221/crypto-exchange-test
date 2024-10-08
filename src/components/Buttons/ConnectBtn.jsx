@@ -20,7 +20,7 @@ export default function CustomConnectButton() {
               <button
                 type="button"
                 onClick={openAccountModal}
-                className="bg-brown-500 text-cream-500 w-[230px] h-[56px] sm:w-auto px-6 py-4 rounded-2xl text-center font-firs text-[20px] font-medium leading-[31.2px] tracking-tighter flex items-center gap-2 "
+                className="bg-brown-500 text-cream-500 w-auto h-[56px] sm:w-[244px] px-6 py-4 rounded-2xl text-center font-firs text-[20px] font-medium leading-[31.2px] tracking-tighter flex flex-row sm:flex-row items-center justify-center gap-2"
               >
                 {account.iconUrl ? (
                   <img
@@ -35,7 +35,7 @@ export default function CustomConnectButton() {
                     className="w-[24px] h-[24px] mr-2"
                   />
                 )}
-                {account.displayName}
+                <p className="hidden sm:block">{account.displayName}</p>
                 <span className="ml-2">▼</span>
               </button>
             ) : (

@@ -1,23 +1,15 @@
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import useWalletStore from "../store/useWalletStore";
-import {
-  getTokenBalance,
-  getSwapRate,
-  checkAllowance,
-  approveToken
-} from "../services/uniswapService";
+import { getTokenBalance, approveToken } from "../services/viemService";
 
 export default function useTokenBalance() {
   const { fromToken, toToken, setFromToken, setToToken } =
     useWalletStore.getState();
   const { address } = useAccount();
-  const [amount, setAmount] = useState("");
   const [balance, setBalance] = useState(null);
-  const [amountReceived, setAmountReceived] = useState("");
   const [hasAllowance, setHasAllowance] = useState(false);
 
-  // Получение баланса токена
   useEffect(() => {
     const fetchTokenBalance = async () => {
       if (fromToken && address) {
@@ -26,54 +18,36 @@ export default function useTokenBalance() {
           fromToken.address,
           address
         );
-        setBalance(userBalance); // Обновляем баланс
-        console.log("Баланс токена:", userBalance);
+        setBalance(userBalance);
       }
     };
     fetchTokenBalance();
   }, [fromToken, address]);
 
-  // Обновление курса обмена
-  useEffect(() => {
-    const updateSwapRate = async () => {
-      if (fromToken && toToken && amount) {
-        console.log("Текущие токены и сумма:", fromToken, toToken, amount);
-        const rate = await getSwapRate(
-          amount,
-          fromToken.address,
-          toToken.address
-        );
-        setAmountReceived(rate);
-      }
-    };
-    updateSwapRate();
-  }, [fromToken, toToken, amount]);
-
-  // Обработчик аппрува
-  const handleApprove = async () => {
-    if (!hasAllowance) {
-      console.log("Запрашиваем разрешение на использование токена");
-
+  const checkUserAllowance = async (amount) => {
+    if (fromToken.address === "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE") {
+      setHasAllowance(true);
+    }
+    if (fromToken && address && amount) {
       try {
-        await approveToken(fromToken.address, amount);
-        const updatedAllowance = await checkAllowance(
+        const formattedAmount = BigInt(amount * 10 ** fromToken.decimals);
+        const approved = await approveToken(
           fromToken.address,
+          formattedAmount,
           address
         );
-        setHasAllowance(updatedAllowance);
-        console.log("Токен успешно одобрен");
+        if (approved) {
+          console.log("Токен успешно одобрен.");
+          setHasAllowance(true);
+        }
       } catch (error) {
-        console.error("Ошибка при получении аппрува:", error);
+        console.error("Ошибка при проверке allowance:", error);
+        console.log("Произошла ошибка при одобрении токена.");
       }
-    } else {
-      console.log("Разрешение уже выдано");
     }
   };
 
-  // Обработчик выбора токена
   const handleTokenSelect = (token, closeModal, activeSelect) => {
-    console.log("Выбран токен:", token);
-
     if (activeSelect === "from") {
       setFromToken(token);
     } else {
@@ -85,12 +59,10 @@ export default function useTokenBalance() {
   return {
     fromToken,
     toToken,
-    amount,
-    setAmount,
     balance,
-    amountReceived,
     hasAllowance,
-    handleApprove,
-    handleTokenSelect
+    handleTokenSelect,
+    checkUserAllowance,
+    address
   };
 }
