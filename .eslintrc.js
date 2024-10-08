@@ -21,7 +21,8 @@ module.exports = {
     "react/jsx-filename-extension": [1, { extensions: [".js", ".jsx"] }],
     "import/no-extraneous-dependencies": ["error", { devDependencies: true }],
     "react/self-closing-comp": "off",
-    "react/prop-types": "off"
+    "react/prop-types": "off",
+    "no-console": "off"
   },
   settings: {
     react: {
