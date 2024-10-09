@@ -8,21 +8,21 @@ const useWalletStore = create((set) => ({
       name: "USDT",
       address: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
       symbol: "USDT",
-      iconUrl: "/currency/USDT.png",
+      iconUrl: `${process.env.PUBLIC_URL}/currency/USDT.png`,
       decimals: 6
     },
     {
       name: "USDC",
       address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
       symbol: "USDC",
-      iconUrl: "/currency/USDC.png",
+      iconUrl: `${process.env.PUBLIC_URL}/currency/USDC.png`,
       decimals: 6
     },
     {
       name: "ETH",
       address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
       symbol: "ETH",
-      iconUrl: "/currency/ETH.png",
+      iconUrl: `${process.env.PUBLIC_URL}/currency/ETH.png`,
       decimals: 18
     }
   ],

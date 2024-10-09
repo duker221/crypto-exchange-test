@@ -18,7 +18,7 @@ export default function SelectedCurrency({
           type="number"
           value={amount}
           onChange={(e) => !readOnly && onAmountChange(e.target.value)}
-          className={`w-full max-w-[150px] text-[32px] leading-[26.5px] font-bold mr-4 bg-transparent focus:outline-none ${error ? "text-error-500" : "text-black-500 "}`} // Измените стиль
+          className={`w-full max-w-[150px] text-[32px] leading-[26.5px] font-bold mr-4 bg-transparent focus:outline-none ${error ? "text-error-500" : "text-black-500 "}`}
           placeholder="0"
           readOnly={readOnly}
         />
@@ -34,7 +34,11 @@ export default function SelectedCurrency({
               {selectedToken || "Select asset"}
             </span>
             <img src={logoPath} alt={selectedToken} className="w-9 h-9" />
-            <img src="ArrowDown.svg" alt="arrow down" className="w-5 h-5" />
+            <img
+              src={`${process.env.PUBLIC_URL}/ArrowDown.svg`}
+              alt="arrow down"
+              className="w-5 h-5"
+            />
           </button>
         </div>
       </div>

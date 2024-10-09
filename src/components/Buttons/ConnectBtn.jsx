@@ -30,7 +30,7 @@ export default function CustomConnectButton() {
                   />
                 ) : (
                   <img
-                    src="/MetaMaskLogo.svg"
+                    src={`${process.env.PUBLIC_URL}/MetaMaskLogo.svg`}
                     alt="Default Wallet Icon"
                     className="w-[24px] h-[24px] mr-2"
                   />

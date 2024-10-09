@@ -169,7 +169,7 @@ function App() {
               <footer className="px-[40px] py-[32px] fixed bottom-0 left-0 right-0 flex justify-center sm:absolute sm:justify-end sm:bottom-0 sm:right-0">
                 <div className="w-auto h-auto sm:h-[112px] sm:w-[112px] flex items-center radius-2xl bg-cream-500 p-2 rounded-2xl border-[2px] border-brown-500">
                   <img
-                    src="./ArbitrumLogo.png"
+                    src={`${process.env.PUBLIC_URL}/ArbitrumLogo.png`}
                     alt="Arbitrum Logo"
                     className="w-[92px] h-[77px]"
                   />

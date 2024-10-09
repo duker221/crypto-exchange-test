@@ -12,7 +12,11 @@ export default function TokenSelect({ selectedToken, onOpenModal }) {
       </p>
 
       <span className="ml-2">
-        <img src="ArrowDown.svg" alt="Arrow down" className="w-5 h-5" />
+        <img
+          src={`${process.env.PUBLIC_URL}/ArrowDown.svg`}
+          alt="Arrow down"
+          className="w-5 h-5"
+        />
       </span>
     </button>
   );
