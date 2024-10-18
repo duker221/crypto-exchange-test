@@ -27,15 +27,11 @@ export default function useTokenBalance() {
   const checkUserAllowance = async (amount) => {
     if (fromToken.address === "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE") {
       setHasAllowance(true);
+      return true;
     }
     if (fromToken && address && amount) {
       try {
-        const formattedAmount = BigInt(amount * 10 ** fromToken.decimals);
-        const approved = await approveToken(
-          fromToken.address,
-          formattedAmount,
-          address
-        );
+        const approved = await approveToken(fromToken.address, amount, address);
         if (approved) {
           console.log("Токен успешно одобрен.");
           setHasAllowance(true);

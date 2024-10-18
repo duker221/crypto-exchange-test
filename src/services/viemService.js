@@ -128,6 +128,7 @@ export const checkAllowance = async (
       functionName: "allowance",
       args: [userAddress, spenderAddress]
     });
+    console.log(allowance);
     return BigInt(allowance.toString());
   } catch (error) {
     console.error(error.message);
@@ -166,7 +167,6 @@ export const approveToken = async (tokenAddress, amount, userAddress) => {
       account: userAddress
     });
 
-    // Извлечение хэша транзакции
     const txHash = txResponse.hash;
 
     if (typeof txHash !== "string") {

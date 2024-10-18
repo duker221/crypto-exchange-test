@@ -75,12 +75,13 @@ function App() {
   const handleCheckAllowance = async () => {
     if (amountError || !fromToken || !toToken || amountIn <= 0) return;
 
-    setIsCheckingAllowance(true);
     const allowanceValid = await checkUserAllowance(amountIn);
 
     if (!allowanceValid) {
       toast.info("Необходимо подтвердить разрешение (Approve)");
+      console.log(hasAllowance);
     } else {
+      setIsCheckingAllowance(true);
       toast.info("Разрешение получено. Готово к свопу.");
     }
     setIsCheckingAllowance(false);
