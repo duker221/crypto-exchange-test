@@ -43,6 +43,7 @@ function App() {
       return;
     }
     if (balance < value) {
+      console.log(balance);
       console.log(value);
       setAmountError(true);
       setError("Недостаточно средств");
@@ -74,17 +75,17 @@ function App() {
 
   const handleCheckAllowance = async () => {
     if (amountError || !fromToken || !toToken || amountIn <= 0) return;
-
-    const allowanceValid = await checkUserAllowance(amountIn);
-
-    if (!allowanceValid) {
-      toast.info("Необходимо подтвердить разрешение (Approve)");
-      console.log(hasAllowance);
-    } else {
-      setIsCheckingAllowance(true);
-      toast.info("Разрешение получено. Готово к свопу.");
+    try {
+      const allowanceValid = await checkUserAllowance(amountIn);
+      console.log("allowanceValid", allowanceValid);
+      setIsCheckingAllowance(allowanceValid);
+      if (allowanceValid) {
+        toast.success("Разрешение получено. Готово к свопу.");
+      }
+    } catch (error) {
+      setIsCheckingAllowance(false);
+      setError(error.message);
     }
-    setIsCheckingAllowance(false);
   };
 
   const swapTokens = async () => {
@@ -159,12 +160,12 @@ function App() {
                 <button
                   type="button"
                   className={`w-full h-auto max-h-[71px] py-4 text-[26px] bg-brown-500 text-white rounded-2xl mt-4 font-medium text-center ${
-                    fromToken && toToken && !isCheckingAllowance ? "" : "hidden"
+                    fromToken && toToken ? "" : "hidden"
                   }`}
                   onClick={hasAllowance ? swapTokens : handleCheckAllowance}
-                  disabled={amountError || isCheckingAllowance}
+                  disabled={amountError}
                 >
-                  {hasAllowance ? "Своп" : "Approve"}
+                  {hasAllowance ? "Swap" : "Approve"}
                 </button>
               </section>
               <footer className="px-[40px] py-[32px] fixed bottom-0 left-0 right-0 flex justify-center sm:absolute sm:justify-end sm:bottom-0 sm:right-0">

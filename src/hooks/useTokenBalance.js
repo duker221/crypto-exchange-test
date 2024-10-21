@@ -4,7 +4,7 @@ import useWalletStore from "../store/useWalletStore";
 import { getTokenBalance, approveToken } from "../services/viemService";
 
 export default function useTokenBalance() {
-  const { fromToken, toToken, setFromToken, setToToken } =
+  const { fromToken, toToken, setFromToken, setToToken, tokens } =
     useWalletStore.getState();
   const { address } = useAccount();
   const [balance, setBalance] = useState(null);
@@ -25,17 +25,21 @@ export default function useTokenBalance() {
   }, [fromToken, address]);
 
   const checkUserAllowance = async (amount) => {
-    if (fromToken.address === "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE") {
+    console.log(tokens);
+    const eth = tokens.find((t) => t.name === "ETH");
+    if (fromToken.address === eth.address) {
       setHasAllowance(true);
       return true;
     }
     if (fromToken && address && amount) {
       try {
         const approved = await approveToken(fromToken.address, amount, address);
-        if (approved) {
-          console.log("Токен успешно одобрен.");
-          setHasAllowance(true);
-        }
+
+        setHasAllowance(approved); // Обновляем состояние
+        console.log(approved); // Выводим true или false
+
+        // Вместо использования `hasAllowance` сразу после setState
+        return approved; // Возвращаем локально проверенное значение
       } catch (error) {
         console.error("Ошибка при проверке allowance:", error);
         console.log("Произошла ошибка при одобрении токена.");
