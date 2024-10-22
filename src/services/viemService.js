@@ -22,29 +22,6 @@ const SQUID_ROUTER_ADDRESS = process.env.REACT_APP_SQUID_ROUTER_ADDRESS;
 let publicClient;
 let walletClient;
 
-const SQUID_ROUTER_ABI = [
-  {
-    inputs: [
-      { internalType: "address", name: "fromToken", type: "address" },
-      { internalType: "address", name: "toToken", type: "address" },
-      { internalType: "uint256", name: "amountIn", type: "uint256" },
-      { internalType: "uint256", name: "slippage", type: "uint256" },
-      { internalType: "address", name: "userAddress", type: "address" }
-    ],
-    name: "swap",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function"
-  },
-  {
-    constant: true,
-    inputs: [],
-    name: "decimals",
-    outputs: [{ name: "", type: "uint8" }],
-    type: "function"
-  }
-];
-
 if (window.ethereum) {
   try {
     publicClient = createPublicClient({
@@ -154,9 +131,7 @@ export const approveToken = async (tokenAddress, amount, userAddress) => {
       );
     }
 
-    const approvalAmount = amount
-      ? parseUnits(amount.toString(), decimals)
-      : "100000000000000000000";
+    const approvalAmount = parseUnits(amount.toString(), decimals);
 
     console.log(`Approval Amount (wei): ${approvalAmount}`);
 
@@ -166,6 +141,8 @@ export const approveToken = async (tokenAddress, amount, userAddress) => {
       functionName: "approve",
       args: [SQUID_ROUTER_ADDRESS, approvalAmount],
       account: userAddress
+      // gasPrice: BigInt(10 * 10 ** 9), // Хардкодим цену газа в 10 Gwei (или укажи другое значение)
+      // gasLimit: BigInt(100000)
     });
 
     console.log(txResponse);
@@ -220,7 +197,7 @@ const getRoute = async (
     slippage,
     fromChain: "42161",
     toChain: "42161",
-    integratorId: integratorId,
+    integratorId,
     toAddress: userAddress
   };
 
@@ -302,7 +279,6 @@ export const performSwap = async (
       throw new Error("Клиенты не инициализированы");
     }
 
-    // Получаем маршрут перед выполнением свапа
     const routeResponse = await getRoute(
       fromTokenAddress,
       toTokenAddress,
@@ -321,26 +297,25 @@ export const performSwap = async (
       to: routeData.route.transactionRequest.target,
       data: routeData.route.transactionRequest.data,
       value: routeData.route.transactionRequest.value,
-      gasPrice: BigInt(routeData.route.transactionRequest.gasPrice),
+      gasPrice: BigInt(10 * 10 ** 9),
       gasLimit: BigInt(routeData.route.transactionRequest.gasLimit),
       account: userAddress
     });
 
-    const swapTxHash = swapTx;
+    console.log(swapTx);
 
-    if (typeof swapTxHash !== "string") {
+    if (typeof swapTx !== "string") {
       throw new Error("Не удалось получить хэш транзакции");
     }
 
     const receipt = await publicClient.waitForTransactionReceipt({
-      hash: swapTxHash,
+      hash: swapTx,
       timeout: 60000
     });
 
-    if (receipt.status === 1) {
-      return receipt;
-    }
-    throw new Error("Свап транзакция не удалась");
+    console.log(receipt);
+
+    return receipt;
   } catch (error) {
     console.error("Ошибка при выполнении свапа:", error);
     throw error;
