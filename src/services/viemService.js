@@ -17,6 +17,7 @@ const INTEGRATOR_ID = process.env.REACT_APP_INTEGRATOR_ID;
 const CHAIN = arbitrum;
 const SQUID_API_URL = process.env.REACT_APP_SQUID_API_URL;
 const SQUID_ROUTER_ADDRESS = process.env.REACT_APP_SQUID_ROUTER_ADDRESS;
+const ARBITRUM_CHAIN = process.env.REACT_APP_ARBITRUM_CHAIN;
 
 let publicClient;
 let walletClient;
@@ -28,13 +29,10 @@ if (window.ethereum) {
       transport: custom(window.ethereum)
     });
 
-    console.log("Public client initialized", publicClient);
-
     walletClient = createWalletClient({
       chain: CHAIN,
       transport: custom(window.ethereum)
     });
-    console.log(walletClient, "wallet-client");
   } catch (error) {
     useWalletStore.getState().setError("Metamask не установлен");
   }
@@ -68,7 +66,6 @@ export const getTokenBalance = async (tokenName, tokenAddress, userAddress) => {
 
     if (tokenName === "ETH") {
       const balance = await publicClient.getBalance({ address: userAddress });
-      console.log(formatUnits(balance, 18));
       return formatUnits(balance, 18);
     }
 
@@ -78,7 +75,6 @@ export const getTokenBalance = async (tokenName, tokenAddress, userAddress) => {
       functionName: "balanceOf",
       args: [userAddress]
     });
-    console.log(balance);
     return balance;
   } catch (error) {
     return null;
@@ -99,7 +95,6 @@ export const checkAllowance = async (
       tokenAddress.toLowerCase() ===
       "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
     ) {
-      console.log("Native token");
       return BigInt(2 ** 256 - 1);
     }
 
@@ -109,7 +104,6 @@ export const checkAllowance = async (
       functionName: "allowance",
       args: [userAddress, spenderAddress]
     });
-    console.log(allowance);
     return BigInt(allowance.toString());
   } catch (error) {
     console.error(error.message);
@@ -122,7 +116,6 @@ export const approveToken = async (tokenAddress, amount, userAddress) => {
     if (!walletClient) {
       throw new Error("Клиент не инициализирован");
     }
-    console.log(walletClient);
 
     if (!tokenAddress || !userAddress) {
       throw new Error("Недостаточно данных для выполнения approve");
@@ -137,8 +130,6 @@ export const approveToken = async (tokenAddress, amount, userAddress) => {
 
     const approvalAmount = parseUnits(amount.toString(), decimals);
 
-    console.log(`Approval Amount (wei): ${approvalAmount}`);
-
     const txResponse = await walletClient.writeContract({
       address: tokenAddress,
       abi: erc20Abi,
@@ -147,19 +138,14 @@ export const approveToken = async (tokenAddress, amount, userAddress) => {
       account: userAddress
     });
 
-    console.log(txResponse);
-
-    if (typeof txResponse !== "string") {
-      throw new Error("Не удалось получить хэш транзакции");
-    }
-
     const receipt = await publicClient.waitForTransactionReceipt({
       hash: txResponse,
       timeout: 60000
     });
 
-    console.log("receipt:", receipt.status.trim());
-
+    if (!receipt) {
+      throw new Error("Failed to retrieve transaction status");
+    }
     return true;
   } catch (error) {
     console.error("Ошибка при одобрении токена:", error);
@@ -195,8 +181,8 @@ const getRoute = async (
     toToken: toTokenAddress,
     fromAmount: fromAmount.toString(),
     slippage,
-    fromChain: "42161",
-    toChain: "42161",
+    fromChain: ARBITRUM_CHAIN,
+    toChain: ARBITRUM_CHAIN,
     integratorId,
     toAddress: userAddress
   };
@@ -214,6 +200,7 @@ const getRoute = async (
     );
 
     const requestId = result.headers["x-request-id"];
+    // eslint-disable-next-line object-shorthand
     return { data: result.data, requestId: requestId };
   } catch (error) {
     console.error("Error with parameters:", params);
@@ -297,8 +284,6 @@ export const performSwap = async (
       account: userAddress
     });
 
-    console.log(swapTx);
-
     if (typeof swapTx !== "string") {
       throw new Error("Не удалось получить хэш транзакции");
     }
@@ -307,8 +292,6 @@ export const performSwap = async (
       hash: swapTx,
       timeout: 60000
     });
-
-    console.log(receipt);
 
     return receipt;
   } catch (error) {

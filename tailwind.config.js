@@ -41,6 +41,9 @@ module.exports = {
         },
         sand: {
           500: "#f1deb9"
+        },
+        disabled: {
+          500: "#ba9467"
         }
       },
       borderRadius: {

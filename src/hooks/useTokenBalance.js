@@ -11,8 +11,6 @@ export default function useTokenBalance() {
   const [hasAllowance, setHasAllowance] = useState(false);
 
   useEffect(() => {
-    console.log(fromToken);
-    console.log("account", address);
     const fetchTokenBalance = async () => {
       if (fromToken && address) {
         const userBalance = await getTokenBalance(
@@ -27,7 +25,6 @@ export default function useTokenBalance() {
         const { decimals } = fromToken;
         const formattedBalance = Number(userBalance) / 10 ** decimals;
 
-        console.log(formattedBalance);
         setBalance(formattedBalance);
       }
     };
@@ -36,7 +33,6 @@ export default function useTokenBalance() {
   }, [fromToken, address]);
 
   const checkUserAllowance = async (amount) => {
-    console.log(tokens);
     const eth = tokens.find((t) => t.name === "ETH");
     if (fromToken.address === eth.address) {
       setHasAllowance(true);
@@ -50,7 +46,7 @@ export default function useTokenBalance() {
 
         return approved;
       } catch (error) {
-        console.error("Ошибка при проверке allowance:", error);
+        console.error("Error checking allowance:", error);
       }
     }
     return false;

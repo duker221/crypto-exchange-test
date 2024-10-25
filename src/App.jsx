@@ -43,23 +43,32 @@ function App() {
   const [toAmount, setToAmount] = useState("");
   const [amountError, setAmountError] = useState(false);
   const [isCheckingAllowance, setIsCheckingAllowance] = useState(false);
-  const [swapErrorMessage, setSwapErrorMessage] = useState(null); // Текст ошибки
+  const [swapErrorMessage, setSwapErrorMessage] = useState(null);
   const [receivedTokens, setReceivedTokens] = useState(null);
 
   const handleFromAmountChange = (value) => {
-    if (value < 0) {
+    const sanitizedValue = value.replace(/[^0-9.]/g, "");
+
+    if (sanitizedValue === "") {
       setAmountIn("");
+      setAmountError(false);
       return;
     }
-    if (balance < value) {
-      console.log(balance);
-      console.log(value);
+
+    const numericValue = Number(sanitizedValue);
+
+    if (numericValue < 0) {
+      return;
+    }
+
+    if (balance < numericValue) {
       setAmountError(true);
-      setError("Недостаточно средств");
+      setError("Insufficient funds");
     } else {
       setAmountError(false);
     }
-    setAmountIn(Number(value));
+
+    setAmountIn(sanitizedValue);
   };
 
   useEffect(() => {
@@ -86,10 +95,9 @@ function App() {
     if (amountError || !fromToken || !toToken || amountIn <= 0) return;
     try {
       const allowanceValid = await checkUserAllowance(amountIn);
-      console.log("allowanceValid", allowanceValid);
       setIsCheckingAllowance(allowanceValid);
       if (allowanceValid) {
-        toast.success("Разрешение получено. Готово к свопу.");
+        toast.success("Approval granted. Ready to swap.");
       }
     } catch (error) {
       setIsCheckingAllowance(false);
@@ -110,9 +118,7 @@ function App() {
   };
 
   const swapTokens = async () => {
-    console.log("Amount to swap:", amountIn);
     if (!amountError && fromToken && toToken && amountIn > 0) {
-      console.log("Initiating swap with amount:", amountIn);
       setSwapStatus("loading");
 
       try {
@@ -125,17 +131,13 @@ function App() {
         );
         setSwapStatus("success");
         setReceivedTokens({ amount: toAmount, iconUrl: toToken.iconUrl });
-        toast.success("Своп выполнен успешно!");
+        toast.success("Swap completed successfully!");
       } catch (error) {
-        // Проверяем, если поле 'Details' присутствует в ошибке
-        const errorMessage = error.details || "Произошла ошибка при свопе";
-
-        // Показываем сообщение об ошибке
+        const errorMessage =
+          error.details || "An error occurred during the swap";
         toast.error(errorMessage);
         setSwapErrorMessage(errorMessage);
         setSwapStatus("failed");
-        console.log("Error state:", useWalletStore.getState());
-        console.log("Swap error:", error);
       }
     } else {
       console.error("Swap not initiated, amount error:", amountError);
@@ -198,15 +200,21 @@ function App() {
 
                     <button
                       type="button"
-                      className={`w-full h-auto max-h-[71px] py-4 text-[26px] bg-brown-500 text-white rounded-2xl mt-4 font-medium text-center ${
+                      className={`w-full h-auto max-h-[71px] py-4 text-[26px]  text-white rounded-2xl mt-4 font-medium text-center ${
                         fromToken && toToken ? "" : "hidden"
-                      }`}
+                      } ${swapStatus === "loading" ? "bg-disabled-500" : "bg-brown-500"}`}
                       onClick={
                         isCheckingAllowance ? swapTokens : handleCheckAllowance
                       }
-                      disabled={amountError && swapStatus === "loading"}
+                      disabled={amountError || swapStatus === "loading"}
                     >
-                      {isCheckingAllowance ? "Swap" : "Approve"}
+                      {swapStatus === "loading" && "Swap in progress..."}
+                      {swapStatus !== "loading" &&
+                        isCheckingAllowance &&
+                        "Swap"}
+                      {swapStatus !== "loading" &&
+                        !isCheckingAllowance &&
+                        "Approve"}
                     </button>
                   </div>
                 ) : (
