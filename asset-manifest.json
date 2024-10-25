@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/crypto-exchange-test/static/css/main.6aeaa023.css",
-    "main.js": "/crypto-exchange-test/static/js/main.422595e9.js",
+    "main.css": "/crypto-exchange-test/static/css/main.e68324b6.css",
+    "main.js": "/crypto-exchange-test/static/js/main.d29e34ef.js",
     "static/js/5275.4aa761d9.chunk.js": "/crypto-exchange-test/static/js/5275.4aa761d9.chunk.js",
     "static/js/6128.632c72bf.chunk.js": "/crypto-exchange-test/static/js/6128.632c72bf.chunk.js",
     "static/js/9812.26526cdc.chunk.js": "/crypto-exchange-test/static/js/9812.26526cdc.chunk.js",
@@ -65,19 +65,20 @@
     "static/js/7055.206d77bf.chunk.js": "/crypto-exchange-test/static/js/7055.206d77bf.chunk.js",
     "static/js/9432.a5e1d406.chunk.js": "/crypto-exchange-test/static/js/9432.a5e1d406.chunk.js",
     "static/js/6374.d33586eb.chunk.js": "/crypto-exchange-test/static/js/6374.d33586eb.chunk.js",
-    "static/js/4780.6e66716e.chunk.js": "/crypto-exchange-test/static/js/4780.6e66716e.chunk.js",
+    "static/js/4353.18429561.chunk.js": "/crypto-exchange-test/static/js/4353.18429561.chunk.js",
     "static/js/2045.e190c7e7.chunk.js": "/crypto-exchange-test/static/js/2045.e190c7e7.chunk.js",
     "static/js/743.96b965d9.chunk.js": "/crypto-exchange-test/static/js/743.96b965d9.chunk.js",
-    "static/js/7171.7b40e67e.chunk.js": "/crypto-exchange-test/static/js/7171.7b40e67e.chunk.js",
-    "static/js/2769.a7215e76.chunk.js": "/crypto-exchange-test/static/js/2769.a7215e76.chunk.js",
+    "static/js/7171.75306f9a.chunk.js": "/crypto-exchange-test/static/js/7171.75306f9a.chunk.js",
+    "static/js/9126.950cdc94.chunk.js": "/crypto-exchange-test/static/js/9126.950cdc94.chunk.js",
     "static/js/2998.4c0aee52.chunk.js": "/crypto-exchange-test/static/js/2998.4c0aee52.chunk.js",
-    "static/js/3741.147f350f.chunk.js": "/crypto-exchange-test/static/js/3741.147f350f.chunk.js",
+    "static/js/4780.140be5bd.chunk.js": "/crypto-exchange-test/static/js/4780.140be5bd.chunk.js",
+    "static/js/3741.1981e174.chunk.js": "/crypto-exchange-test/static/js/3741.1981e174.chunk.js",
     "static/media/background.png": "/crypto-exchange-test/static/media/background.9c49969454dbfe25ccef.png",
     "static/media/TTFirsNeue-Medium.ttf": "/crypto-exchange-test/static/media/TTFirsNeue-Medium.c40de9018ca2adfa67af.ttf",
     "static/media/PirataOne-Regular.ttf": "/crypto-exchange-test/static/media/PirataOne-Regular.269bd2986eb6f1940505.ttf",
     "index.html": "/crypto-exchange-test/index.html",
-    "main.6aeaa023.css.map": "/crypto-exchange-test/static/css/main.6aeaa023.css.map",
-    "main.422595e9.js.map": "/crypto-exchange-test/static/js/main.422595e9.js.map",
+    "main.e68324b6.css.map": "/crypto-exchange-test/static/css/main.e68324b6.css.map",
+    "main.d29e34ef.js.map": "/crypto-exchange-test/static/js/main.d29e34ef.js.map",
     "5275.4aa761d9.chunk.js.map": "/crypto-exchange-test/static/js/5275.4aa761d9.chunk.js.map",
     "9812.26526cdc.chunk.js.map": "/crypto-exchange-test/static/js/9812.26526cdc.chunk.js.map",
     "6378.9c218a81.chunk.js.map": "/crypto-exchange-test/static/js/6378.9c218a81.chunk.js.map",
@@ -139,16 +140,16 @@
     "7149.ceb7fd21.chunk.js.map": "/crypto-exchange-test/static/js/7149.ceb7fd21.chunk.js.map",
     "7055.206d77bf.chunk.js.map": "/crypto-exchange-test/static/js/7055.206d77bf.chunk.js.map",
     "6374.d33586eb.chunk.js.map": "/crypto-exchange-test/static/js/6374.d33586eb.chunk.js.map",
-    "4780.6e66716e.chunk.js.map": "/crypto-exchange-test/static/js/4780.6e66716e.chunk.js.map",
     "2045.e190c7e7.chunk.js.map": "/crypto-exchange-test/static/js/2045.e190c7e7.chunk.js.map",
     "743.96b965d9.chunk.js.map": "/crypto-exchange-test/static/js/743.96b965d9.chunk.js.map",
-    "7171.7b40e67e.chunk.js.map": "/crypto-exchange-test/static/js/7171.7b40e67e.chunk.js.map",
-    "2769.a7215e76.chunk.js.map": "/crypto-exchange-test/static/js/2769.a7215e76.chunk.js.map",
+    "7171.75306f9a.chunk.js.map": "/crypto-exchange-test/static/js/7171.75306f9a.chunk.js.map",
+    "9126.950cdc94.chunk.js.map": "/crypto-exchange-test/static/js/9126.950cdc94.chunk.js.map",
     "2998.4c0aee52.chunk.js.map": "/crypto-exchange-test/static/js/2998.4c0aee52.chunk.js.map",
-    "3741.147f350f.chunk.js.map": "/crypto-exchange-test/static/js/3741.147f350f.chunk.js.map"
+    "4780.140be5bd.chunk.js.map": "/crypto-exchange-test/static/js/4780.140be5bd.chunk.js.map",
+    "3741.1981e174.chunk.js.map": "/crypto-exchange-test/static/js/3741.1981e174.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.6aeaa023.css",
-    "static/js/main.422595e9.js"
+    "static/css/main.e68324b6.css",
+    "static/js/main.d29e34ef.js"
   ]
 }
