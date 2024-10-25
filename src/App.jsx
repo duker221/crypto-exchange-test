@@ -4,7 +4,7 @@ import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { ToastContainer, toast } from "react-toastify";
+import toast, { Toaster } from "react-hot-toast";
 import CustomConnectButton from "./components/Buttons/ConnectBtn";
 import config from "./services/config";
 import Logo from "./components/Logo";
@@ -12,6 +12,7 @@ import { getSwapRate, performSwap } from "./services/viemService";
 import TokenSelect from "./components/Buttons/TokenSelect";
 import SelectedCurrency from "./components/Buttons/SelectedCurrency";
 import TokenModal from "./components/Modals/TokenModal";
+import SuccessScreen from "./components/SwapResult/SuccessScreen";
 import useTokenBalance from "./hooks/useTokenBalance";
 import useModal from "./hooks/useModal";
 import useWalletStore from "./store/useWalletStore";
@@ -24,18 +25,26 @@ function App() {
     toToken,
     balance,
     handleTokenSelect,
-    hasAllowance,
     checkUserAllowance,
     address
   } = useTokenBalance();
 
   const { isModalOpen, activeSelect, handleOpenModal, handleCloseModal } =
     useModal();
-  const [amountIn, setAmountIn] = useState(0);
-  const { tokens, setError } = useWalletStore();
+  const [amountIn, setAmountIn] = useState("");
+  const {
+    tokens,
+    setError,
+    setSwapStatus,
+    swapStatus,
+    setFromToken,
+    setToToken
+  } = useWalletStore();
   const [toAmount, setToAmount] = useState("");
   const [amountError, setAmountError] = useState(false);
   const [isCheckingAllowance, setIsCheckingAllowance] = useState(false);
+  const [swapErrorMessage, setSwapErrorMessage] = useState(null); // Текст ошибки
+  const [receivedTokens, setReceivedTokens] = useState(null);
 
   const handleFromAmountChange = (value) => {
     if (value < 0) {
@@ -88,10 +97,24 @@ function App() {
     }
   };
 
+  const closeFinalScreen = () => {
+    setSwapStatus("idle");
+    setAmountIn("");
+    setToAmount("");
+    setAmountError(false);
+    setIsCheckingAllowance(false);
+    setReceivedTokens(null);
+    setSwapErrorMessage(null);
+    setFromToken(null);
+    setToToken(null);
+  };
+
   const swapTokens = async () => {
     console.log("Amount to swap:", amountIn);
     if (!amountError && fromToken && toToken && amountIn > 0) {
       console.log("Initiating swap with amount:", amountIn);
+      setSwapStatus("loading");
+
       try {
         await performSwap(
           fromToken.address,
@@ -100,11 +123,19 @@ function App() {
           1,
           address
         );
+        setSwapStatus("success");
+        setReceivedTokens({ amount: toAmount, iconUrl: toToken.iconUrl });
         toast.success("Своп выполнен успешно!");
       } catch (error) {
-        setError(error.message);
-        console.log(error);
-        toast.error("Ошибка при выполнении свопа");
+        // Проверяем, если поле 'Details' присутствует в ошибке
+        const errorMessage = error.details || "Произошла ошибка при свопе";
+
+        // Показываем сообщение об ошибке
+        toast.error(errorMessage);
+        setSwapErrorMessage(errorMessage);
+        setSwapStatus("failed");
+        console.log("Error state:", useWalletStore.getState());
+        console.log("Swap error:", error);
       }
     } else {
       console.error("Swap not initiated, amount error:", amountError);
@@ -122,51 +153,71 @@ function App() {
                 <CustomConnectButton />
               </header>
 
-              <section className="w-full max-w-[500px] h-auto py-8 px-6 flex flex-col gap-[12px] rounded-[40px] border-[4px] border-black-500 bg-cream-500 mx-auto">
-                <div className="flex flex-col gap-[12px]">
-                  <h1 className="font-bold text-[26px] text-center md:text-left">
-                    From
-                  </h1>
-                  {fromToken ? (
-                    <SelectedCurrency
-                      amount={amountIn}
-                      selectedToken={fromToken.name}
-                      logoPath={fromToken.iconUrl}
-                      onOpenModal={() => handleOpenModal("from")}
-                      onAmountChange={handleFromAmountChange}
-                      balance={balance ? balance.formatted : "0"}
-                      readOnly={false}
-                      error={amountError}
-                    />
-                  ) : (
-                    <TokenSelect onOpenModal={() => handleOpenModal("from")} />
-                  )}
-                </div>
-                <h1 className="font-bold text-[26px] text-center md:text-left">
-                  To
-                </h1>
-                {toToken ? (
-                  <SelectedCurrency
-                    amount={toAmount}
-                    selectedToken={toToken.name}
-                    logoPath={toToken.iconUrl}
-                    onOpenModal={() => handleOpenModal("to")}
-                    readOnly
-                  />
-                ) : (
-                  <TokenSelect onOpenModal={() => handleOpenModal("to")} />
-                )}
+              <section
+                className={`w-full max-w-[500px] h-auto py-8 px-6 flex flex-col gap-[12px] rounded-[40px] border-[4px] border-black-500 mx-auto ${
+                  swapStatus === "failed" ? "bg-pink-500" : "bg-cream-500"
+                }`}
+              >
+                {swapStatus === "idle" || swapStatus === "loading" ? (
+                  <div>
+                    <div className="flex flex-col gap-[12px]">
+                      <h1 className="font-bold text-[26px] text-center md:text-left">
+                        From
+                      </h1>
+                      {fromToken ? (
+                        <SelectedCurrency
+                          amount={amountIn}
+                          selectedToken={fromToken.name}
+                          logoPath={fromToken.iconUrl}
+                          onOpenModal={() => handleOpenModal("from")}
+                          onAmountChange={handleFromAmountChange}
+                          balance={balance ? balance.formatted : "0"}
+                          readOnly={false}
+                          error={amountError}
+                        />
+                      ) : (
+                        <TokenSelect
+                          onOpenModal={() => handleOpenModal("from")}
+                        />
+                      )}
+                    </div>
+                    <h1 className="font-bold text-[26px] text-center md:text-left">
+                      To
+                    </h1>
+                    {toToken ? (
+                      <SelectedCurrency
+                        amount={toAmount}
+                        selectedToken={toToken.name}
+                        logoPath={toToken.iconUrl}
+                        onOpenModal={() => handleOpenModal("to")}
+                        readOnly
+                      />
+                    ) : (
+                      <TokenSelect onOpenModal={() => handleOpenModal("to")} />
+                    )}
 
-                <button
-                  type="button"
-                  className={`w-full h-auto max-h-[71px] py-4 text-[26px] bg-brown-500 text-white rounded-2xl mt-4 font-medium text-center ${
-                    fromToken && toToken ? "" : "hidden"
-                  }`}
-                  onClick={hasAllowance ? swapTokens : handleCheckAllowance}
-                  disabled={amountError}
-                >
-                  {hasAllowance ? "Swap" : "Approve"}
-                </button>
+                    <button
+                      type="button"
+                      className={`w-full h-auto max-h-[71px] py-4 text-[26px] bg-brown-500 text-white rounded-2xl mt-4 font-medium text-center ${
+                        fromToken && toToken ? "" : "hidden"
+                      }`}
+                      onClick={
+                        isCheckingAllowance ? swapTokens : handleCheckAllowance
+                      }
+                      disabled={amountError && swapStatus === "loading"}
+                    >
+                      {isCheckingAllowance ? "Swap" : "Approve"}
+                    </button>
+                  </div>
+                ) : (
+                  <SuccessScreen
+                    receivedTokens={receivedTokens}
+                    receivedAmount={toAmount}
+                    closeFinalScreen={closeFinalScreen}
+                    swapError={swapStatus === "failed"}
+                    errorMessage={swapErrorMessage}
+                  />
+                )}
               </section>
               <footer className="px-[40px] py-[32px] fixed bottom-0 left-0 right-0 flex justify-center sm:absolute sm:justify-end sm:bottom-0 sm:right-0">
                 <div className="w-auto h-auto sm:h-[112px] sm:w-[112px] flex items-center radius-2xl bg-cream-500 p-2 rounded-2xl border-[2px] border-brown-500">
@@ -179,7 +230,7 @@ function App() {
               </footer>
             </div>
 
-            <ToastContainer />
+            <Toaster />
             {isModalOpen && (
               <div className="absolute inset-0 z-50">
                 <TokenModal

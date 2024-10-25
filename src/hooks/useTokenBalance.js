@@ -11,6 +11,8 @@ export default function useTokenBalance() {
   const [hasAllowance, setHasAllowance] = useState(false);
 
   useEffect(() => {
+    console.log(fromToken);
+    console.log("account", address);
     const fetchTokenBalance = async () => {
       if (fromToken && address) {
         const userBalance = await getTokenBalance(
@@ -18,9 +20,18 @@ export default function useTokenBalance() {
           fromToken.address,
           address
         );
-        setBalance(userBalance);
+        if (fromToken.name === "ETH") {
+          setBalance(userBalance);
+          return;
+        }
+        const { decimals } = fromToken;
+        const formattedBalance = Number(userBalance) / 10 ** decimals;
+
+        console.log(formattedBalance);
+        setBalance(formattedBalance);
       }
     };
+
     fetchTokenBalance();
   }, [fromToken, address]);
 
@@ -35,16 +46,14 @@ export default function useTokenBalance() {
       try {
         const approved = await approveToken(fromToken.address, amount, address);
 
-        setHasAllowance(approved); // Обновляем состояние
-        console.log(approved); // Выводим true или false
+        setHasAllowance(approved);
 
-        // Вместо использования `hasAllowance` сразу после setState
-        return approved; // Возвращаем локально проверенное значение
+        return approved;
       } catch (error) {
         console.error("Ошибка при проверке allowance:", error);
-        console.log("Произошла ошибка при одобрении токена.");
       }
     }
+    return false;
   };
 
   const handleTokenSelect = (token, closeModal, activeSelect) => {

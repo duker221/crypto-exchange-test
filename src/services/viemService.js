@@ -4,12 +4,11 @@ import {
   createWalletClient,
   custom,
   erc20Abi,
-  formatEther,
-  parseUnits
+  parseUnits,
+  formatUnits
 } from "viem";
 import { arbitrum } from "viem/chains";
 import { config } from "dotenv";
-
 import useWalletStore from "../store/useWalletStore";
 
 config({ path: ".env" });
@@ -29,10 +28,13 @@ if (window.ethereum) {
       transport: custom(window.ethereum)
     });
 
+    console.log("Public client initialized", publicClient);
+
     walletClient = createWalletClient({
       chain: CHAIN,
       transport: custom(window.ethereum)
     });
+    console.log(walletClient, "wallet-client");
   } catch (error) {
     useWalletStore.getState().setError("Metamask не установлен");
   }
@@ -66,7 +68,8 @@ export const getTokenBalance = async (tokenName, tokenAddress, userAddress) => {
 
     if (tokenName === "ETH") {
       const balance = await publicClient.getBalance({ address: userAddress });
-      return formatEther(balance);
+      console.log(formatUnits(balance, 18));
+      return formatUnits(balance, 18);
     }
 
     const balance = await publicClient.readContract({
@@ -119,6 +122,7 @@ export const approveToken = async (tokenAddress, amount, userAddress) => {
     if (!walletClient) {
       throw new Error("Клиент не инициализирован");
     }
+    console.log(walletClient);
 
     if (!tokenAddress || !userAddress) {
       throw new Error("Недостаточно данных для выполнения approve");
@@ -141,20 +145,16 @@ export const approveToken = async (tokenAddress, amount, userAddress) => {
       functionName: "approve",
       args: [SQUID_ROUTER_ADDRESS, approvalAmount],
       account: userAddress
-      // gasPrice: BigInt(10 * 10 ** 9), // Хардкодим цену газа в 10 Gwei (или укажи другое значение)
-      // gasLimit: BigInt(100000)
     });
 
     console.log(txResponse);
 
-    const txHash = txResponse;
-
-    if (typeof txHash !== "string") {
+    if (typeof txResponse !== "string") {
       throw new Error("Не удалось получить хэш транзакции");
     }
 
     const receipt = await publicClient.waitForTransactionReceipt({
-      hash: txHash,
+      hash: txResponse,
       timeout: 60000
     });
 
@@ -187,7 +187,7 @@ const getRoute = async (
   slippage,
   userAddress
 ) => {
-  const integratorId = INTEGRATOR_ID; // Интегратор ID из переменных окружения
+  const integratorId = INTEGRATOR_ID;
   const fromAmount = parseUnits(amountIn.toString(), 6);
   const params = {
     fromAddress: userAddress,
@@ -216,9 +216,6 @@ const getRoute = async (
     const requestId = result.headers["x-request-id"];
     return { data: result.data, requestId: requestId };
   } catch (error) {
-    if (error.response) {
-      console.error("API error:", error.response.data);
-    }
     console.error("Error with parameters:", params);
     throw error;
   }
@@ -272,8 +269,6 @@ export const performSwap = async (
   slippage,
   userAddress
 ) => {
-  console.log("Initiating swap with amount:", amountIn);
-
   try {
     if (!walletClient || !publicClient) {
       throw new Error("Клиенты не инициализированы");
@@ -297,8 +292,8 @@ export const performSwap = async (
       to: routeData.route.transactionRequest.target,
       data: routeData.route.transactionRequest.data,
       value: routeData.route.transactionRequest.value,
-      gasPrice: BigInt(10 * 10 ** 9),
-      gasLimit: BigInt(routeData.route.transactionRequest.gasLimit),
+      gasPrice: BigInt(routeData.route.transactionRequest.gasPrice),
+      gasLimit: BigInt(10 * 10 ** 9),
       account: userAddress
     });
 

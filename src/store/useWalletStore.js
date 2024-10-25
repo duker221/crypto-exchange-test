@@ -27,6 +27,8 @@ const useWalletStore = create((set) => ({
     }
   ],
   errors: [],
+  swapStatus: "idle",
+  setSwapStatus: (status) => set({ swapStatus: status }),
   setError: (error) => set((state) => ({ errors: [...state.errors, error] })),
   setFromToken: (token) => set({ fromToken: token }),
   setToToken: (token) => set({ toToken: token })
