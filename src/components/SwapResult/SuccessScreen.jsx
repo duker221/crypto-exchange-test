@@ -7,8 +7,6 @@ export default function SuccessScreen({
   swapError,
   errorMessage
 }) {
-  console.log(receivedTokens, "receivedTokens");
-
   return (
     <div className={`flex flex-col items-center `}>
       <h1 className="font-bold text-4xl text-center font-firs mb-4">
