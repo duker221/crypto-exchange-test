@@ -24,6 +24,12 @@ jobs:
         run: yarn install
 
       - name: Build the project
+        env:
+            REACT_APP_VITE_CHAIN: ${{ secrets.REACT_APP_VITE_CHAIN }}
+            REACT_APP_INTEGRATOR_ID: ${{ secrets.REACT_APP_INTEGRATOR_ID }}
+            REACT_APP_SQUID_API_URL: ${{ secrets.REACT_APP_SQUID_API_URL }}
+            REACT_APP_SQUID_ROUTER_ADDRESS: ${{ secrets.REACT_APP_SQUID_ROUTER_ADDRESS }}
+            REACT_APP_ARBITRUM_CHAIN: ${{ secrets.REACT_APP_ARBITRUM_CHAIN }}
         run: yarn build
 
       - name: Deploy to GitHub Pages
